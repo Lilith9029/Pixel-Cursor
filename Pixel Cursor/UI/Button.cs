@@ -13,6 +13,9 @@ namespace Pixel_Cursor.UI
         int _padding;
         int _coner;
 
+        public int BoundsWidth => Bounds.Width;
+        public int BoundsHeight => Bounds.Height;
+
         public Rectangle Bounds { get; set; }
         public string Label { get; set; }
 

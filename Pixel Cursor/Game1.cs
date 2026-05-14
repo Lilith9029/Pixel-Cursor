@@ -11,16 +11,19 @@ namespace Pixel_Cursor
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
-        int Width = 300;
-        int Height = 200;
+        int Width = 193;
+        int Height = 112;
 
-        public static int Scale = 4;
+        public static int Scale = 5;
 
         RenderTarget2D _canvas;
 
         Button _importBtn;
         Button _defaultBtn;
         BitmapFont _bitmapFont;
+        CursorCard _card;
+        CardGrid _cardGrid;
+        Texture2D _pixel;
 
         public Game1()
         {
@@ -55,6 +58,22 @@ namespace Pixel_Cursor
             var texNormal = Content.Load<Texture2D>("Sprites/button_normal");
             var texPressed = Content.Load<Texture2D>("Sprites/button_pressed");
             var fontSheet = Content.Load<Texture2D>("Fonts/4x3Font");
+            var cardTex = Content.Load<Texture2D>("Sprites/button_normal");
+            var iconFrameTex = Content.Load<Texture2D>("Sprites/button_normal");
+            var actionSheet = Content.Load<Texture2D>("Sprites/action_icons");
+            var btnNormal = Content.Load<Texture2D>("Sprites/button_normal");
+            var btnPressed = Content.Load<Texture2D>("Sprites/button_pressed");
+            var placeholder = Content.Load<Texture2D>("Sprites/cursor_placeholder");
+
+            _pixel = new Texture2D(GraphicsDevice, 1, 1);
+            _pixel.SetData(new[] { Color.White });
+
+            string[] names = {
+                "ARROW","HAND","TEXT","MOVE","CROSS",
+                "WAIT","APP START","NO","HELP","SIZE NS",
+                "SIZE WE","SIZE NWSE","SIZE NESW",
+                "PEN","PIN","PERSON","UP ARROW"
+            };
 
             _bitmapFont = new BitmapFont(
                 sheet: fontSheet,
@@ -66,21 +85,51 @@ namespace Pixel_Cursor
             _bitmapFont.SpaceWidth = 1;
             _bitmapFont.LetterSpacing = 1;
 
+            var gridBounds = new Rectangle(5, 15, 188, 81);
+            _cardGrid = new CardGrid(GraphicsDevice, _spriteBatch, gridBounds, _canvas);
+
+            foreach (var name in names)
+            {
+                var card = new CursorCard(
+                    cardTex, iconFrameTex, actionSheet,
+                    btnNormal, btnPressed, placeholder,
+                    _bitmapFont, Vector2.Zero
+
+                );
+                card.CursorName = name;
+                _cardGrid.AddCard(card);
+            }
+
+            int bottomY = Height - _bitmapFont.CharH - 7;
+            int margin = 8;
 
             _importBtn = new Button(
                 texNormal, texPressed, _bitmapFont,
-                new Vector2(10, 10),
+                new Vector2(margin, bottomY),
                 "IMPORT PACK",
-                2,
-                1
+                2, 1
             );
+            _importBtn.OnClick += () => { Console.WriteLine("Import Pack"); };
 
+            int defaultX = Width - margin - GetButtonWidth("DEFAULT", 2, 1);
             _defaultBtn = new Button(
                 texNormal, texPressed, _bitmapFont,
-                new Vector2(10, 10),
-                "DefaultPack",
-                1
+                new Vector2(defaultX, bottomY),
+                "DEFAULT",
+                2, 1
             );
+            _defaultBtn.OnClick += () => { Console.WriteLine("Default"); };
+
+            _card = new CursorCard(
+                cardTex, iconFrameTex, actionSheet,
+                btnNormal, btnPressed, placeholder,
+                _bitmapFont,
+                new Vector2(10, 10)
+            );
+            _card.CursorName = "SIZE NESW";
+            _card.OnSet += () => Console.WriteLine("Set clicked!");
+            _card.OnImport += () => Console.WriteLine("Import clicked!");
+            _card.OnCustom += () => Console.WriteLine("Custom clicked!");
         }
 
         protected override void Update(GameTime gameTime)
@@ -92,13 +141,13 @@ namespace Pixel_Cursor
             var ms = Mouse.GetState();
             _importBtn.Update(ms, Scale);
             _defaultBtn.Update(ms, Scale);
+            _cardGrid.Update(ms, Keyboard.GetState(), Scale);
 
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
-            // TODO: Add your drawing code here
             GraphicsDevice.SetRenderTarget(_canvas);
             GraphicsDevice.Clear(Color.White);
 
@@ -122,8 +171,17 @@ namespace Pixel_Cursor
 
         void DrawUI()
         {
+            _cardGrid.Draw(_pixel);
+            _cardGrid.DrawToCanvas(_spriteBatch, _pixel);
+
             _importBtn.Draw(_spriteBatch);
-            /*_defaultBtn.Draw(_spriteBatch);*/
+            _defaultBtn.Draw(_spriteBatch);
+        }
+
+        int GetButtonWidth(string label, int padding, int corner)
+        {
+            var size = _bitmapFont.MeasureString(label);
+            return (int)size.X + (padding * 2) + (corner * 2);
         }
     }
 }
