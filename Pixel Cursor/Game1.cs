@@ -24,6 +24,7 @@ namespace Pixel_Cursor
         CursorCard _card;
         CardGrid _cardGrid;
         Texture2D _pixel;
+        Slider _slider;
 
         public Game1()
         {
@@ -64,6 +65,9 @@ namespace Pixel_Cursor
             var btnNormal = Content.Load<Texture2D>("Sprites/button_normal");
             var btnPressed = Content.Load<Texture2D>("Sprites/button_pressed");
             var placeholder = Content.Load<Texture2D>("Sprites/cursor_placeholder");
+            var sliderTrack = Content.Load<Texture2D>("Sprites/slider_track");
+            var sliderNotch = Content.Load<Texture2D>("Sprites/slider_notch");
+            var sliderHandle = Content.Load<Texture2D>("Sprites/slider_handle");
 
             _pixel = new Texture2D(GraphicsDevice, 1, 1);
             _pixel.SetData(new[] { Color.White });
@@ -130,6 +134,15 @@ namespace Pixel_Cursor
             _card.OnSet += () => Console.WriteLine("Set clicked!");
             _card.OnImport += () => Console.WriteLine("Import clicked!");
             _card.OnCustom += () => Console.WriteLine("Custom clicked!");
+
+            _slider = new Slider(
+                sliderTrack, sliderNotch, sliderHandle,
+                _pixel,
+                texNormal,
+                _bitmapFont,
+                new Vector2(115, 5)
+            );
+            _slider.OnValueChanged += (val) => Console.WriteLine($"Slider value: {val}px");
         }
 
         protected override void Update(GameTime gameTime)
@@ -142,6 +155,7 @@ namespace Pixel_Cursor
             _importBtn.Update(ms, Scale);
             _defaultBtn.Update(ms, Scale);
             _cardGrid.Update(ms, Keyboard.GetState(), Scale);
+            _slider.Update(ms, Scale);
 
             base.Update(gameTime);
         }
@@ -176,6 +190,7 @@ namespace Pixel_Cursor
 
             _importBtn.Draw(_spriteBatch);
             _defaultBtn.Draw(_spriteBatch);
+            _slider.Draw(_spriteBatch);
         }
 
         int GetButtonWidth(string label, int padding, int corner)
